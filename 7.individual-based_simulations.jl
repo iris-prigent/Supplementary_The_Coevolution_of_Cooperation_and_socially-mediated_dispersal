@@ -15,7 +15,7 @@ n_deme::Int=4000
 pmut::Float64=0.01
 sigmut::Float64=0.01
 gen::Int=150000
-dirname="results"
+dirname="NAME"
 sfreq::Int=1000
 
 
@@ -27,11 +27,11 @@ mkpath(string(path,"/sampling")) #creates a folder for the output
 
 for id_trait in 1:n_traits #allows user to enter initial values for each trait
     if id_trait<n_traits
-        println(string("Enter initial value for dispersal with ",id_trait-1," cooperators"))
+        println(string("Enter initial value for dispersal probability with ",id_trait-1," cooperators"))
         ini_z=readline()
         ini_z = parse(Float64, ini_z)
     else
-        println("Enter initial value for help ")
+        println("Enter initial value for helping probability ")
         ini_z=readline()
         ini_z = parse(Float64, ini_z)
     end
@@ -56,7 +56,7 @@ function allhelper(indiv_pop::Matrix{Float64},n::Int,n_deme::Int)
     #function that determines which individual in the population help or defects
     help::Matrix{Float64}=rand(Float64, (n, n_deme))
     help=help.<indiv_pop
-    return help
+    return  Int.(help)
 end
 
  function investment(b::Float64,u::Float64,n_helper::Vector{Int},n::Int)
@@ -65,7 +65,7 @@ end
     return val
 end
 
-function pay_cost(pop_helping::Matrix{Float64},cost::Float64,delta::Float64)
+function pay_cost(pop_helping::Matrix{Int},cost::Float64,delta::Float64)
     #cfunction that omputes the cost paid by each individual 
     val::Matrix{Float64}=delta.*cost.*pop_helping
     return val
@@ -79,7 +79,7 @@ p::Matrix{Float64}=fill(0.0,(n,n_deme))
 @time for it in 1:gen
     pop_helping=allhelper(pop_all[n_traits,:,:],n,n_deme) #determine which inividual helps
     for i in 1:n_deme
-        n_helper[i]=Int(sum(pop_helping[:,i])) #assign to each patch its number of helper
+        n_helper[i]=sum(pop_helping[:,i]) #assign to each patch its number of helper
         disp_realized[:,i].=pop_all[n_helper[i]+1,:,i] #assign to each individual its dispersal probability
     end
     fec::Matrix{Float64}=investment(b,u,n_helper,n)'.-pay_cost(pop_helping,cost,delta) #compute fecundity
